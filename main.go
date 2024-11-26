@@ -110,8 +110,6 @@ func (r Running) Calories() float64 {
 func (r Running) TrainingInfo() InfoMessage {
 	// вставьте ваш код ниже
 	msg := r.Training.TrainingInfo()
-	msg.Distance = r.distance()
-	msg.Speed = r.meanSpeed()
 	msg.Calories = r.Calories()
 	return msg
 }
@@ -137,7 +135,11 @@ type Walking struct {
 // Это переопределенный метод Calories() из Training.
 func (w Walking) Calories() float64 {
 	// вставьте ваш код ниже
-	return ((CaloriesWeightMultiplier*w.Weight + ((w.meanSpeed()*KmHInMsec)*(w.meanSpeed()*KmHInMsec)/w.Height*CaloriesSpeedHeightMultiplier)*CaloriesSpeedHeightMultiplier*w.Weight) * w.Duration.Hours() * MinInHours)
+	if w.Height == 0 {
+		return 0
+	}
+
+	return ((CaloriesWeightMultiplier*w.Weight + ((w.meanSpeed()*KmHInMsec)*(w.meanSpeed()*KmHInMsec)/(w.Height/CmInM)*CaloriesSpeedHeightMultiplier)*CaloriesSpeedHeightMultiplier*w.Weight) * w.Duration.Hours() * MinInHours)
 }
 
 // TrainingInfo возвращает структуру InfoMessage с информацией о проведенной тренировке.
@@ -145,8 +147,6 @@ func (w Walking) Calories() float64 {
 func (w Walking) TrainingInfo() InfoMessage {
 	// вставьте ваш код ниже
 	msg := w.Training.TrainingInfo()
-	msg.Distance = w.distance()
-	msg.Speed = w.meanSpeed()
 	msg.Calories = w.Calories()
 	return msg
 }
@@ -172,7 +172,7 @@ type Swimming struct {
 // Это переопределенный метод Calories() из Training.
 func (s Swimming) meanSpeed() float64 {
 	// вставьте ваш код ниже
-	return float64(s.LengthPool*s.CountPool/MInKm) / s.Duration.Hours()
+	return float64(s.LengthPool*s.CountPool) / MInKm / s.Duration.Hours()
 }
 
 // Calories возвращает количество калорий, потраченных при плавании.
@@ -188,10 +188,13 @@ func (s Swimming) Calories() float64 {
 // Это переопределенный метод TrainingInfo() из Training.
 func (s Swimming) TrainingInfo() InfoMessage {
 	// вставьте ваш код ниже
-	msg := s.Training.TrainingInfo()
-	msg.Distance = s.distance()
-	msg.Speed = s.meanSpeed()
-	msg.Calories = s.Calories()
+	msg := InfoMessage{
+		TrainingType: s.TrainingType,
+		Duration:     s.Duration,
+		Distance:     float64(s.LengthPool*s.CountPool) / MInKm,
+		Speed:        s.meanSpeed(),
+		Calories:     s.Calories(),
+	}
 	return msg
 }
 
